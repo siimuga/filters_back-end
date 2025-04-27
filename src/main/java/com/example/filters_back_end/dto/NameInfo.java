@@ -5,5 +5,5 @@ import lombok.Data;
 @Data
 public class NameInfo {
 
-    String name;
+    private String name;
 }
