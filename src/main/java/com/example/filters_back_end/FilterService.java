@@ -1,25 +1,39 @@
 package com.example.filters_back_end;
 
 import com.example.filters_back_end.dto.CriteriaInfo;
+import com.example.filters_back_end.dto.CriteriaRequest;
 import com.example.filters_back_end.dto.FilterInfo;
+import com.example.filters_back_end.dto.FilterRequest;
 import com.example.filters_back_end.dto.NameInfo;
 import com.example.filters_back_end.entities.ComparingCondition;
 import com.example.filters_back_end.entities.Criteria;
 import com.example.filters_back_end.entities.CriteriaType;
+import com.example.filters_back_end.entities.CriteriaTypeCc;
+import com.example.filters_back_end.entities.Filter;
 import com.example.filters_back_end.entities.FilterCriteria;
 import com.example.filters_back_end.mappers.ComparingConditionMapper;
 import com.example.filters_back_end.mappers.CriteriaMapper;
 import com.example.filters_back_end.mappers.CriteriaTypeMapper;
 import com.example.filters_back_end.repos.ComparingConditionRepository;
+import com.example.filters_back_end.repos.CriteriaRepository;
+import com.example.filters_back_end.repos.CriteriaTypeCcRepository;
 import com.example.filters_back_end.repos.CriteriaTypeRepository;
 import com.example.filters_back_end.repos.FilterCriteriaRepository;
+import com.example.filters_back_end.repos.FilterRepository;
 import jakarta.annotation.Resource;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+
+import static com.example.filters_back_end.enums.CriteriaTypeEnum.AMOUNT;
+import static com.example.filters_back_end.enums.CriteriaTypeEnum.TITLE;
 
 @Service
 public class FilterService {
@@ -31,7 +45,16 @@ public class FilterService {
     private CriteriaTypeRepository criteriaTypeRepository;
 
     @Resource
+    private CriteriaTypeCcRepository criteriaTypeCcRepository;
+
+    @Resource
     private ComparingConditionRepository comparingConditionRepository;
+
+    @Resource
+    private FilterRepository filterRepository;
+
+    @Resource
+    private CriteriaRepository criteriaRepository;
 
     @Resource
     private CriteriaMapper criteriaMapper;
@@ -64,6 +87,70 @@ public class FilterService {
 
         setSeqNumbers(filterInfos);
         return filterInfos;
+    }
+
+    @Transactional
+    public void addFilter(FilterRequest request) {
+        Filter filter = createNewFilter(request);
+        filter = filterRepository.save(filter);
+        List<Criteria> criterias = createNewCriterias(request.getCriteriaRequests());
+        criteriaRepository.saveAll(criterias);
+        List<FilterCriteria> filterCriterias = createNewFilterCriterias(criterias, filter);
+        filterCriteriaRepository.saveAll(filterCriterias);
+    }
+
+    private List<FilterCriteria> createNewFilterCriterias(List<Criteria> criterias, Filter filter) {
+        List<FilterCriteria> filterCriterias = new ArrayList<>();
+        for (Criteria criteria : criterias) {
+            FilterCriteria filterCriteria = createNewFilterCriteria(criteria, filter);
+            filterCriterias.add(filterCriteria);
+        }
+        return filterCriterias;
+    }
+
+    private FilterCriteria createNewFilterCriteria(Criteria criteria, Filter filter) {
+        return FilterCriteria.builder()
+                .filter(filter)
+                .criteria(criteria)
+                .build();
+    }
+
+    private Filter createNewFilter(FilterRequest request) {
+        return Filter.builder()
+                .name(request.getName())
+                .build();
+    }
+
+    private List<Criteria> createNewCriterias(List<CriteriaRequest> requests) {
+        List<Criteria> criterias = new ArrayList<>();
+        for (CriteriaRequest request : requests) {
+            criterias.add(createNewCriteria(request));
+        }
+        return criterias;
+    }
+
+    private Criteria createNewCriteria(CriteriaRequest request) {
+        Criteria criteria = new Criteria();
+        CriteriaTypeCc criteriaTypeCc = criteriaTypeCcRepository.findByComparingConditionAndCriteriaType(request.getCondition(), request.getType());
+        handleValueSelection(request, criteria);
+        criteria.setCriteriaTypeCc(criteriaTypeCc);
+        return criteria;
+    }
+
+    private static void handleValueSelection(CriteriaRequest request, Criteria criteria) {
+        if (TITLE.getTextValue().equals(request.getType())){
+            criteria.setTitle(request.getValue());
+        } else if (AMOUNT.getTextValue().equals(request.getType())) {
+            criteria.setAmount(Integer.valueOf(request.getValue()));
+        } else {
+            SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy");
+            try {
+                Date date = formatter.parse(request.getValue());
+                criteria.setDate(date);
+            } catch (ParseException e) {
+                throw new RuntimeException();
+            }
+        }
     }
 
     private void fillFilterInfos(FilterCriteria filterCriteria, boolean isFilterExisting, List<FilterInfo> filterInfos) {

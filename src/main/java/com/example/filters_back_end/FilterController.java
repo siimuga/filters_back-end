@@ -1,10 +1,13 @@
 package com.example.filters_back_end;
 
 import com.example.filters_back_end.dto.FilterInfo;
+import com.example.filters_back_end.dto.FilterRequest;
 import com.example.filters_back_end.dto.NameInfo;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -31,6 +34,11 @@ public class FilterController {
     @GetMapping("filters")
     public List<FilterInfo> findAllFiltersWithCriterias() {
         return filterService.findAllFiltersWithCriterias();
+    }
+
+    @PostMapping("filter")
+    public void addFilter(@RequestBody FilterRequest request) {
+        filterService.addFilter(request);
     }
 
 }
