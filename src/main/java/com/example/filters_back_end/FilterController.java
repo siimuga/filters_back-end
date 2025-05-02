@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -29,6 +30,11 @@ public class FilterController {
     @GetMapping("comparingCondition")
     public List<NameInfo> findAllComparingConditions() {
         return filterService.findAllComparingConditions();
+    }
+
+    @GetMapping("comparingCondition/type")
+    public List<NameInfo> findAllComparingConditionsByType(@RequestParam String type) {
+        return filterService.findAllComparingConditionsByType(type);
     }
 
     @GetMapping("filters")

@@ -20,11 +20,11 @@ public class CriteriaTypeCc {
     @Column(name = "ID", nullable = false)
     private Integer id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "CRITERIA_TYPE_ID", nullable = false)
     private CriteriaType criteriaType;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "COMPARING_CONDITION_ID", nullable = false)
     private ComparingCondition comparingCondition;
 }

@@ -22,7 +22,7 @@ public class Criteria {
     @Column(name = "ID", nullable = false)
     private Integer id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "CRITERIA_TYPE_CC_ID", nullable = false)
     private CriteriaTypeCc criteriaTypeCc;
 

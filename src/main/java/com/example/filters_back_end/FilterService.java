@@ -13,6 +13,7 @@ import com.example.filters_back_end.entities.Filter;
 import com.example.filters_back_end.entities.FilterCriteria;
 import com.example.filters_back_end.mappers.ComparingConditionMapper;
 import com.example.filters_back_end.mappers.CriteriaMapper;
+import com.example.filters_back_end.mappers.CriteriaTypeCcMapper;
 import com.example.filters_back_end.mappers.CriteriaTypeMapper;
 import com.example.filters_back_end.repos.ComparingConditionRepository;
 import com.example.filters_back_end.repos.CriteriaRepository;
@@ -63,6 +64,9 @@ public class FilterService {
     private CriteriaTypeMapper criteriaTypeMapper;
 
     @Resource
+    private CriteriaTypeCcMapper criteriaTypeCcMapper;
+
+    @Resource
     private ComparingConditionMapper comparingConditionMapper;
 
     public List<NameInfo> findAllCriteriaTypes() {
@@ -73,6 +77,11 @@ public class FilterService {
     public List<NameInfo> findAllComparingConditions() {
         List<ComparingCondition> comparingConditions = comparingConditionRepository.findAll();
         return comparingConditionMapper.comparingConditionsToNameInfos(comparingConditions);
+    }
+
+    public List<NameInfo> findAllComparingConditionsByType(String type) {
+        List<CriteriaTypeCc> criteriaTypeCcs = criteriaTypeCcRepository.findAllByCriteriaType(type);
+        return criteriaTypeCcMapper.criteriaTypeCcsToNameInfos(criteriaTypeCcs);
     }
 
     public List<FilterInfo> findAllFiltersWithCriterias() {
