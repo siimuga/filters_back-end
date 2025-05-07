@@ -5,17 +5,14 @@ import com.example.filters_back_end.dto.CriteriaRequest;
 import com.example.filters_back_end.dto.FilterInfo;
 import com.example.filters_back_end.dto.FilterRequest;
 import com.example.filters_back_end.dto.NameInfo;
-import com.example.filters_back_end.entities.ComparingCondition;
 import com.example.filters_back_end.entities.Criteria;
 import com.example.filters_back_end.entities.CriteriaType;
 import com.example.filters_back_end.entities.CriteriaTypeCc;
 import com.example.filters_back_end.entities.Filter;
 import com.example.filters_back_end.entities.FilterCriteria;
-import com.example.filters_back_end.mappers.ComparingConditionMapper;
 import com.example.filters_back_end.mappers.CriteriaMapper;
 import com.example.filters_back_end.mappers.CriteriaTypeCcMapper;
 import com.example.filters_back_end.mappers.CriteriaTypeMapper;
-import com.example.filters_back_end.repos.ComparingConditionRepository;
 import com.example.filters_back_end.repos.CriteriaRepository;
 import com.example.filters_back_end.repos.CriteriaTypeCcRepository;
 import com.example.filters_back_end.repos.CriteriaTypeRepository;
@@ -26,10 +23,10 @@ import org.apache.commons.lang3.time.DateFormatUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.sql.Date;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -39,6 +36,8 @@ import static com.example.filters_back_end.enums.CriteriaTypeEnum.TITLE;
 @Service
 public class FilterService {
 
+    public static final String DATE_PATTERN = "dd.MM.yyyy";
+
     @Resource
     private FilterCriteriaRepository filterCriteriaRepository;
 
@@ -47,9 +46,6 @@ public class FilterService {
 
     @Resource
     private CriteriaTypeCcRepository criteriaTypeCcRepository;
-
-    @Resource
-    private ComparingConditionRepository comparingConditionRepository;
 
     @Resource
     private FilterRepository filterRepository;
@@ -67,19 +63,16 @@ public class FilterService {
     private CriteriaTypeCcMapper criteriaTypeCcMapper;
 
     @Resource
-    private ComparingConditionMapper comparingConditionMapper;
+    private ValidationService validationService;
 
     public List<NameInfo> findAllCriteriaTypes() {
         List<CriteriaType> criteriaTypes = criteriaTypeRepository.findAll();
         return criteriaTypeMapper.criteriaTypesToNameInfos(criteriaTypes);
     }
 
-    public List<NameInfo> findAllComparingConditions() {
-        List<ComparingCondition> comparingConditions = comparingConditionRepository.findAll();
-        return comparingConditionMapper.comparingConditionsToNameInfos(comparingConditions);
-    }
-
     public List<NameInfo> findAllComparingConditionsByType(String type) {
+        validationService.validateType(type);
+
         List<CriteriaTypeCc> criteriaTypeCcs = criteriaTypeCcRepository.findAllByCriteriaType(type);
         return criteriaTypeCcMapper.criteriaTypeCcsToNameInfos(criteriaTypeCcs);
     }
@@ -100,6 +93,8 @@ public class FilterService {
 
     @Transactional
     public void addFilter(FilterRequest request) {
+        validationService.validateRequest(request);
+
         Filter filter = createNewFilter(request);
         filter = filterRepository.save(filter);
         List<Criteria> criterias = createNewCriterias(request.getCriteriaRequests());
@@ -146,19 +141,15 @@ public class FilterService {
         return criteria;
     }
 
-    private static void handleValueSelection(CriteriaRequest request, Criteria criteria) {
+    private void handleValueSelection(CriteriaRequest request, Criteria criteria) {
         if (TITLE.getTextValue().equals(request.getType())){
             criteria.setTitle(request.getValue());
         } else if (AMOUNT.getTextValue().equals(request.getType())) {
             criteria.setAmount(Integer.valueOf(request.getValue()));
         } else {
-            SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy");
-            try {
-                Date date = formatter.parse(request.getValue());
-                criteria.setDate(date);
-            } catch (ParseException e) {
-                throw new RuntimeException();
-            }
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_PATTERN);
+            LocalDate date = LocalDate.parse(request.getValue(), formatter);
+            criteria.setDate(Date.valueOf(date));
         }
     }
 
@@ -207,6 +198,6 @@ public class FilterService {
         if (criteria.getTitle() != null) {
             return criteria.getTitle();
         }
-        return DateFormatUtils.format(criteria.getDate(), "dd.MM.yyyy");
+        return DateFormatUtils.format(criteria.getDate(), DATE_PATTERN);
     }
 }
