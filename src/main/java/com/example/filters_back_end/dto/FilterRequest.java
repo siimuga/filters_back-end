@@ -3,11 +3,13 @@ package com.example.filters_back_end.dto;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.Builder;
 import lombok.Data;
 
 import java.util.List;
 
 @Data
+@Builder
 public class FilterRequest {
     @NotBlank(message = "name cannot be blank")
     @Size(min = 3, message = "min 3 characters")
