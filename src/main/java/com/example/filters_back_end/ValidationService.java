@@ -15,7 +15,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Service
-public class ValidationService {
+public class ValidationService implements ValidationServiceI {
 
     public static final String INVALID_INPUT = "Wrong input";
     public static final String DATE_PATTERN = "dd.MM.yyyy";

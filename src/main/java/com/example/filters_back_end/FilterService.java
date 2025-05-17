@@ -34,7 +34,7 @@ import static com.example.filters_back_end.enums.CriteriaTypeEnum.AMOUNT;
 import static com.example.filters_back_end.enums.CriteriaTypeEnum.TITLE;
 
 @Service
-public class FilterService {
+public class FilterService implements FilterServiceI {
 
     public static final String DATE_PATTERN = "dd.MM.yyyy";
 
@@ -63,7 +63,7 @@ public class FilterService {
     private CriteriaTypeCcMapper criteriaTypeCcMapper;
 
     @Resource
-    private ValidationService validationService;
+    private ValidationServiceI validationServiceI;
 
     public List<NameInfo> findAllCriteriaTypes() {
         List<CriteriaType> criteriaTypes = criteriaTypeRepository.findAll();
@@ -71,7 +71,7 @@ public class FilterService {
     }
 
     public List<NameInfo> findAllComparingConditionsByType(String type) {
-        validationService.validateType(type);
+        validationServiceI.validateType(type);
 
         List<CriteriaTypeCc> criteriaTypeCcs = criteriaTypeCcRepository.findAllByCriteriaType(type);
         return criteriaTypeCcMapper.criteriaTypeCcsToNameInfos(criteriaTypeCcs);
@@ -93,7 +93,7 @@ public class FilterService {
 
     @Transactional
     public void addFilter(FilterRequest request) {
-        validationService.validateRequest(request);
+        validationServiceI.validateRequest(request);
 
         Filter filter = createNewFilter(request);
         filter = filterRepository.save(filter);

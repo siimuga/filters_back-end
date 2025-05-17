@@ -29,26 +29,26 @@ import static org.springframework.http.HttpStatus.OK;
 public class FilterController {
 
     @Resource
-    FilterService filterService;
+    FilterServiceI filterServiceI;
 
     @GetMapping("criteriaType")
     public List<NameInfo> findAllCriteriaTypes() {
-        return filterService.findAllCriteriaTypes();
+        return filterServiceI.findAllCriteriaTypes();
     }
 
     @GetMapping("comparingCondition")
     public List<NameInfo> findAllComparingConditionsByType(@RequestParam @NotBlank(message = "type cannot be blank") String type) {
-        return filterService.findAllComparingConditionsByType(type);
+        return filterServiceI.findAllComparingConditionsByType(type);
     }
 
     @GetMapping("filters")
     public List<FilterInfo> findAllFiltersWithCriterias() {
-        return filterService.findAllFiltersWithCriterias();
+        return filterServiceI.findAllFiltersWithCriterias();
     }
 
     @PostMapping("filter")
     public ResponseEntity<?> addFilter(@RequestBody @Valid FilterRequest request) {
-        filterService.addFilter(request);
+        filterServiceI.addFilter(request);
         Map<String, String> result = new HashMap<>();
         result.put("message", "Filter added successfully");
         return new ResponseEntity<>(result, OK);
