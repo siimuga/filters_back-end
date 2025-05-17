@@ -53,10 +53,12 @@ public class FilterServiceTest {
     @Mock
     private ValidationService validationService;
 
-    public static final String INVALID_INPUT = "Wrong input";
-    public static final String TITLE = "Title";
-    public static final String AMOUNT = "Amount";
-    public static final String DATE = "Date";
+    private static final String INVALID_INPUT = "Wrong input";
+    private static final String TITLE = "Title";
+    private static final String AMOUNT = "Amount";
+    private static final String DATE = "Date";
+    private static final String NAME = "Noname";
+    private static final String CONDITION = "Sunny";
 
 
     @Mock
@@ -116,20 +118,20 @@ public class FilterServiceTest {
     public void findAllComparingConditionsByType_correctType() {
         String type = "Correct";
 
-        List<CriteriaTypeCc> mockEntities = List.of(new CriteriaTypeCc(), new CriteriaTypeCc());
+        List<CriteriaTypeCc> criteriaTypeCcs = List.of(new CriteriaTypeCc(), new CriteriaTypeCc());
         NameInfo ni1 = createNewNameInfo("Alfa");
         NameInfo ni2 = createNewNameInfo("Beta");
         List<NameInfo> expectedResult = List.of(ni1, ni2);
         doNothing().when(validationService).validateType(type);
-        when(criteriaTypeCcRepository.findAllByCriteriaType(type)).thenReturn(mockEntities);
-        when(criteriaTypeCcMapper.criteriaTypeCcsToNameInfos(mockEntities)).thenReturn(expectedResult);
+        when(criteriaTypeCcRepository.findAllByCriteriaType(type)).thenReturn(criteriaTypeCcs);
+        when(criteriaTypeCcMapper.criteriaTypeCcsToNameInfos(criteriaTypeCcs)).thenReturn(expectedResult);
 
         List<NameInfo> result = filterService.findAllComparingConditionsByType(type);
 
         assertEquals(expectedResult, result);
         verify(validationService, times(1)).validateType(type);
         verify(criteriaTypeCcRepository, times(1)).findAllByCriteriaType(type);
-        verify(criteriaTypeCcMapper, times(1)).criteriaTypeCcsToNameInfos(mockEntities);
+        verify(criteriaTypeCcMapper, times(1)).criteriaTypeCcsToNameInfos(criteriaTypeCcs);
     }
 
     @Test
@@ -153,7 +155,7 @@ public class FilterServiceTest {
     public void addFilter_invalidInput() {
         CriteriaRequest cr1 = createNewCriteriaRequest("Umpa", "Jbno");
         List<CriteriaRequest> criteriaRequests = List.of(cr1);
-        FilterRequest request = createNewFilterRequest("Name", criteriaRequests);
+        FilterRequest request = createNewFilterRequest(criteriaRequests);
 
         Map<String, String> errors = new LinkedHashMap<>();
         errors.put("type", "This criteria type does not exist");
@@ -173,12 +175,10 @@ public class FilterServiceTest {
     public void addFilter_wrongDateFormatInput() {
         CriteriaRequest cr1 = createNewCriteriaRequest(DATE, "Asiis");
         List<CriteriaRequest> criteriaRequests = List.of(cr1);
-        FilterRequest request = createNewFilterRequest("Noname", criteriaRequests);
+        FilterRequest request = createNewFilterRequest(criteriaRequests);
 
         doNothing().when(validationService).validateRequest(request);
-        when(filterRepository.save(any())).thenReturn(new Filter());
-        when(criteriaRepository.saveAll(anyList())).thenReturn(new ArrayList<>());
-        when(filterCriteriaRepository.saveAll(anyList())).thenReturn(new ArrayList<>());
+        mockSaveOperations();
 
         assertThrows(java.time.format.DateTimeParseException.class, () -> {
             filterService.addFilter(request);
@@ -193,12 +193,10 @@ public class FilterServiceTest {
     public void addFilter_wrongAmountInput() {
         CriteriaRequest cr1 = createNewCriteriaRequest(AMOUNT, "5hh");
         List<CriteriaRequest> criteriaRequests = List.of(cr1);
-        FilterRequest request = createNewFilterRequest("Noname", criteriaRequests);
+        FilterRequest request = createNewFilterRequest(criteriaRequests);
 
         doNothing().when(validationService).validateRequest(request);
-        when(filterRepository.save(any())).thenReturn(new Filter());
-        when(criteriaRepository.saveAll(anyList())).thenReturn(new ArrayList<>());
-        when(filterCriteriaRepository.saveAll(anyList())).thenReturn(new ArrayList<>());
+        mockSaveOperations();
 
         assertThrows(NumberFormatException.class, () -> {
             filterService.addFilter(request);
@@ -215,12 +213,10 @@ public class FilterServiceTest {
         CriteriaRequest cr2 = createNewCriteriaRequest(AMOUNT, "5");
         CriteriaRequest cr3 = createNewCriteriaRequest(DATE, "01.11.1939");
         List<CriteriaRequest> criteriaRequests = List.of(cr1, cr2, cr3);
-        FilterRequest request = createNewFilterRequest("Noname", criteriaRequests);
+        FilterRequest request = createNewFilterRequest(criteriaRequests);
 
         doNothing().when(validationService).validateRequest(request);
-        when(filterRepository.save(any())).thenReturn(new Filter());
-        when(criteriaRepository.saveAll(anyList())).thenReturn(new ArrayList<>());
-        when(filterCriteriaRepository.saveAll(anyList())).thenReturn(new ArrayList<>());
+        mockSaveOperations();
 
         assertDoesNotThrow(() -> filterService.addFilter(request));
         verify(validationService, times(1)).validateRequest(any());
@@ -229,9 +225,15 @@ public class FilterServiceTest {
         verify(filterCriteriaRepository, times(1)).saveAll(anyList());
     }
 
-    private FilterRequest createNewFilterRequest(String name, List<CriteriaRequest> criteriaRequests) {
+    private void mockSaveOperations() {
+        when(filterRepository.save(any())).thenReturn(new Filter());
+        when(criteriaRepository.saveAll(anyList())).thenReturn(new ArrayList<>());
+        when(filterCriteriaRepository.saveAll(anyList())).thenReturn(new ArrayList<>());
+    }
+
+    private FilterRequest createNewFilterRequest(List<CriteriaRequest> criteriaRequests) {
         return FilterRequest.builder()
-                .name(name)
+                .name(NAME)
                 .criteriaRequests(criteriaRequests)
                 .build();
     }
@@ -239,7 +241,7 @@ public class FilterServiceTest {
     private CriteriaRequest createNewCriteriaRequest(String type, Object value) {
         return CriteriaRequest.builder()
                 .type(type)
-                .condition("Sunny")
+                .condition(CONDITION)
                 .value((String) value)
                 .build();
     }

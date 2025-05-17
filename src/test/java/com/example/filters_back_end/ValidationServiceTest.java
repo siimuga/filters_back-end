@@ -15,9 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -33,9 +31,10 @@ public class ValidationServiceTest {
     @InjectMocks
     private ValidationService validationService;
 
-    public static final String TITLE = "Title";
-    public static final String AMOUNT = "Amount";
-    public static final String DATE = "Date";
+    private static final String TITLE = "Title";
+    private static final String AMOUNT = "Amount";
+    private static final String DATE = "Date";
+    private static final String NAME = "Noname";
 
     @Mock
     private CriteriaTypeRepository criteriaTypeRepository;
@@ -54,9 +53,6 @@ public class ValidationServiceTest {
     @Test
     public void validateType_wrongType() {
         String type = "Wrong";
-
-        Map<String, String> errors = new LinkedHashMap<>();
-        errors.put("type", "This criteria type does not exist");
 
         when(criteriaTypeRepository.findByName(type)).thenReturn(null);
 
@@ -80,7 +76,7 @@ public class ValidationServiceTest {
     public void validateRequest_wrongType() {
         CriteriaRequest cr1 = createNewCriteriaRequest("Vsop", "Sunny", "5hh");
         List<CriteriaRequest> criteriaRequests = List.of(cr1);
-        FilterRequest request = createNewFilterRequest("Noname", criteriaRequests);
+        FilterRequest request = createNewFilterRequest(criteriaRequests);
 
         when(criteriaTypeRepository.findByName(any())).thenReturn(null);
         when(comparingConditionRepository.findByName(any())).thenReturn(new ComparingCondition());
@@ -98,7 +94,7 @@ public class ValidationServiceTest {
     public void validateRequest_wrongCondition() {
         CriteriaRequest cr1 = createNewCriteriaRequest(TITLE, null, "Job");
         List<CriteriaRequest> criteriaRequests = List.of(cr1);
-        FilterRequest request = createNewFilterRequest("Noname", criteriaRequests);
+        FilterRequest request = createNewFilterRequest(criteriaRequests);
 
         when(criteriaTypeRepository.findByName(any())).thenReturn(new CriteriaType());
         when(comparingConditionRepository.findByName(any())).thenReturn(null);
@@ -116,7 +112,7 @@ public class ValidationServiceTest {
     public void validateRequest_wrongTypeAndConditionCombination() {
         CriteriaRequest cr1 = createNewCriteriaRequest(TITLE, "Buumer", "Job");
         List<CriteriaRequest> criteriaRequests = List.of(cr1);
-        FilterRequest request = createNewFilterRequest("Noname", criteriaRequests);
+        FilterRequest request = createNewFilterRequest( criteriaRequests);
 
         when(criteriaTypeRepository.findByName(any())).thenReturn(new CriteriaType());
         when(comparingConditionRepository.findByName(any())).thenReturn(new ComparingCondition());
@@ -134,7 +130,7 @@ public class ValidationServiceTest {
     public void validateRequest_wrongDateInput() {
         CriteriaRequest cr1 = createNewCriteriaRequest(DATE, "Buumer", "Job");
         List<CriteriaRequest> criteriaRequests = List.of(cr1);
-        FilterRequest request = createNewFilterRequest("Noname", criteriaRequests);
+        FilterRequest request = createNewFilterRequest(criteriaRequests);
 
         when(criteriaTypeRepository.findByName(any())).thenReturn(new CriteriaType());
         when(comparingConditionRepository.findByName(any())).thenReturn(new ComparingCondition());
@@ -154,7 +150,7 @@ public class ValidationServiceTest {
         CriteriaRequest cr2 = createNewCriteriaRequest(AMOUNT, "Buumer", "96");
         CriteriaRequest cr3 = createNewCriteriaRequest(DATE, "Buumer", "01.01.2000");
         List<CriteriaRequest> criteriaRequests = List.of(cr1, cr2, cr3);
-        FilterRequest request = createNewFilterRequest("Noname", criteriaRequests);
+        FilterRequest request = createNewFilterRequest(criteriaRequests);
 
         when(criteriaTypeRepository.findByName(any())).thenReturn(new CriteriaType());
         when(comparingConditionRepository.findByName(any())).thenReturn(new ComparingCondition());
@@ -166,9 +162,9 @@ public class ValidationServiceTest {
         verify(criteriaTypeCcRepository, times(3)).findByComparingConditionAndCriteriaType(anyString(), anyString());
     }
 
-    private FilterRequest createNewFilterRequest(String name, List<CriteriaRequest> criteriaRequests) {
+    private FilterRequest createNewFilterRequest(List<CriteriaRequest> criteriaRequests) {
         return FilterRequest.builder()
-                .name(name)
+                .name(NAME)
                 .criteriaRequests(criteriaRequests)
                 .build();
     }
